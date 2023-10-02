@@ -1,0 +1,57 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+# Function to crawl and extract URLs
+def crawl_urls(parameters):
+    primary_category = parameters.get("primary_category", "")
+    secondary_category = parameters.get("secondary_category", "")
+    geography = parameters.get("geography", "")
+    date_range = parameters.get("date_range", "")
+
+    # Define the URL to start crawling from
+    base_url = "https://example.com"  # Replace with the actual website URL you want to crawl
+    search_url = f"{base_url}/search?q={primary_category}+{secondary_category}+{geography}+{date_range}"
+
+    # Send a GET request to the search URL
+    response = requests.get(search_url)
+
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Find and extract URLs from the search results page
+        result_urls = []
+        for result in soup.find_all("a", href=True):
+            result_url = result["href"]
+            if result_url.startswith("http"):
+                result_urls.append(result_url)
+
+        return result_urls
+
+    else:
+        print(f"Failed to fetch data. Status code: {response.status_code}")
+        return []
+
+# Function to save URLs to a CSV file
+def save_to_csv(urls):
+    with open("output.csv", mode="w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["URL"])
+        for url in urls:
+            writer.writerow([url])
+
+# Example JSON input parameters
+input_parameters = {
+    "primary_category": "Medical Journal",
+    "secondary_category": "Orthopedic",
+    "geography": "India",
+    "date_range": "2022",
+}
+
+# Crawl URLs based on input parameters
+found_urls = crawl_urls(input_parameters)
+
+# Save the URLs to a CSV file
+save_to_csv(found_urls)
+
+print("URLs have been saved to output.csv")
